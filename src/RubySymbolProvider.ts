@@ -2,7 +2,7 @@ import { DocumentSymbolProvider, TextDocument, CancellationToken, SymbolInformat
 import { readFileSync } from "fs";
 import { LanguagePlugin, DiagramNode, DiagramGenerator } from './DiagramGenerator'
 
-const ATTR_REGEX = /(field|has_many|has_one|belongs_to) :([A-z]+)(.*)/g
+const ATTR_REGEX = /(field|attr_encrypted|has_many|has_one|belongs_to) :([A-z]+)(.*)/g
 const ATTR_PART_MATCH_REGEX = /(?<type>[A-z_]+) :(?<name>[A-z_]+)(?<remainder>.*)/g
 const ATTR_REMAINDER_MATCH_REGEX = /:(?<key>[A-z_]+) => (?<value>[A-z0-9_:\.\[\]]+)/g
 
@@ -24,14 +24,18 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
         const attributes = text.match(ATTR_REGEX)
         for (let attr of attributes || []) {
             const details = this.parseAttribute(attr)
+            // console.log(`augmenting an attribute ${attr}`, { node, ...details, attr })
             if (details) {
-                // console.log('augmenting an attribute', { node, ...details, attr })
                 const { type, name, meta } = details
                 switch (type) {
                     case 'field':
                         let n = meta.as ? meta.as.replace(':', '') : name
                         let schema = meta.type ? `${n} <${meta.type}>` : n
                         node.keys[n] = `${node.name} : ${schema}`
+                        break
+                    
+                    case 'attr_encrypted':
+                        node.keys[name] = `${node.name} : ${name} <encrypted>`
                         break
 
                     case 'has_many':
@@ -68,6 +72,7 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
     }
 
     parseAttribute(str: string): ExtraAttribute|null {
+        ATTR_PART_MATCH_REGEX.lastIndex = 0
         const parts = ATTR_PART_MATCH_REGEX.exec(str)
         if (parts?.groups) {
             const { type, name, remainder } = parts.groups
