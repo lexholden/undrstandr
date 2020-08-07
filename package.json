@@ -10,14 +10,24 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:erd-generator.generate"
+		"onCommand:erd-generator.generate",
+		"onCommand:erd-generator.generate-deep",
+		"onCommand:erd-generator.regenerate"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
 		"commands": [
 			{
 				"command": "erd-generator.generate",
-				"title": "Generate ERD From File"
+				"title": "Undrstandr: Generate ERD From File"
+			},
+			{
+				"command": "erd-generator.generate-deep",
+				"title": "Undrstandr: Generate ERD From File (with deep connections)"
+			},
+			{
+				"command": "erd-generator.regenerate",
+				"title": "Undrstandr: Regenerate Last Diagram"
 			}
 		]
 	},

@@ -1,10 +1,12 @@
 import { DocumentSymbolProvider, TextDocument, CancellationToken, SymbolInformation, SymbolKind, Location, DocumentSymbol, Range, commands } from "vscode";
 import { readFileSync } from "fs";
 import { LanguagePlugin, DiagramNode, DiagramGenerator } from './DiagramGenerator'
+import { getLatestInsidersMetadata } from "vscode-test/out/util";
 
 const ATTR_REGEX = /(field|attr_encrypted|has_many|has_one|belongs_to) :([A-z]+)(.*)/g
 const ATTR_PART_MATCH_REGEX = /(?<type>[A-z_]+) :(?<name>[A-z_]+)(?<remainder>.*)/g
 const ATTR_REMAINDER_MATCH_REGEX = /:(?<key>[A-z_]+) => (?<value>[A-z0-9_:\.\[\]]+)/g
+const NAMESPACE_REGEX = /([A-z0-9]+::)+([A-z0-9]+)/g
 
 export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugin {
     async provideDocumentSymbols(doc: TextDocument, token: CancellationToken) {
@@ -71,6 +73,33 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
         }
     }
 
+    async augmentElementNode(node: SymbolInformation, parent: SymbolInformation, doc: TextDocument, generator: DiagramGenerator) {
+        const text = doc.getText(node.location.range)
+        switch(node.kind) {
+            case SymbolKind.Method:
+                const namespaces = this.parseNamespaces(text)
+                if (namespaces) {
+                    for (let namespace of namespaces) {
+                        const offset = doc.getText().indexOf(namespace)
+                        const position = doc.positionAt(offset + namespace.length - 1)
+                        if (position) {
+                            const connections = await commands.executeCommand('vscode.executeDefinitionProvider', doc.uri, position)
+                            for (let conn of connections) {
+                                const className = this.parseClassName(namespace)
+                                // console.log({ node, className })
+                                if (className) {
+                                    generator.connections.push([parent.name, className, `${parent.name} <-- ${className} : used_in ${node.name}()`])
+                                }
+                                await generator.addFile(conn.uri)
+                            }
+                        }
+                    }
+                    // console.log('namespaces called within method', namespaces)
+                }
+                break
+        }
+    }
+
     parseAttribute(str: string): ExtraAttribute|null {
         ATTR_PART_MATCH_REGEX.lastIndex = 0
         const parts = ATTR_PART_MATCH_REGEX.exec(str)
@@ -93,6 +122,12 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
             return { type, name, meta }
         }
         return null
+    }
+
+    parseNamespaces(str: string) {
+        NAMESPACE_REGEX.lastIndex = 0
+        const results = str.match(NAMESPACE_REGEX)
+        return results
     }
 
     parseClassName(fullPath: string): string|undefined {

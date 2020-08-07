@@ -18,26 +18,13 @@ export function activate(context: ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	let disposable = commands.registerCommand('erd-generator.generate', async () => {
-		const { activeTextEditor } = window
-		// TODO Parse the language for the current file
-		
-		const dg = new DiagramGenerator({
-			languagePlugins: {
-				ruby: new RubySymbolProvider()
-			}
-		})
 
-		await dg.generate(activeTextEditor)
-		let mermaidFileSyntax = dg.render()
+	const root = process.cwd()
+	const mmdCliPath = join(__dirname, '..', 'node_modules/.bin/mmdc')
+	const inputMermaidFilePath = join(__dirname, '..', 'test.mmd')
+	const outputSvgPath = join(__dirname, '..', 'output.svg')
 
-		// Generate the diagram
-		const root = process.cwd()
-		const mmdCliPath = join(__dirname, '..', 'node_modules/.bin/mmdc')
-		const inputMermaidFilePath = join(__dirname, '..', 'test.mmd')
-		const outputSvgPath = join(__dirname, '..', 'output.svg')
-
-		writeFileSync(inputMermaidFilePath, mermaidFileSyntax)
+	const generateMermaidFromExistingFile = () => {
 		const generate = spawn(`${mmdCliPath} -i ${inputMermaidFilePath} -o ${outputSvgPath}`, { shell: true })
 		generate.on('close', async code => {
 		  if (code !== 0) {
@@ -52,11 +39,40 @@ export function activate(context: ExtensionContext) {
 		});
 
 		generate.stdout.on('data', (v) => console.log(v));
-	});
+	}
+
+	const generate = async (augmentElements: boolean) => {
+		const { activeTextEditor } = window
+		// TODO Parse the language for the current file
+		
+		const dg = new DiagramGenerator({
+			augmentElements,
+			languagePlugins: {
+				ruby: new RubySymbolProvider()
+			}
+		})
+
+		await dg.generate(activeTextEditor)
+		let mermaidFileSyntax = dg.render()
+
+		// Generate the diagram
+		writeFileSync(inputMermaidFilePath, mermaidFileSyntax)
+		generateMermaidFromExistingFile()
+	}
+
+	context.subscriptions.push(
+		commands.registerCommand('erd-generator.generate', async () => generate(false)),
+		commands.registerCommand('erd-generator.generate-deep', async () => generate(true)),
+		commands.registerCommand('erd-generator.regenerate', async () => generateMermaidFromExistingFile())
+	)
+
+	context.subscriptions.push(
+		
+	)
+
+
 
 	languages.registerDocumentSymbolProvider({ scheme: 'file', language: 'ruby' }, new RubySymbolProvider())
-
-	context.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated

@@ -22,6 +22,7 @@ export class DiagramGenerator {
         this.cache[uri.path] = true // Mark that we are already traversing this path to avoid infinite recursion
         const symbols: any[] = await commands.executeCommand("vscode.executeDocumentSymbolProvider", uri) as any
 		for (let symbol of symbols) {
+            console.log(`adding ${symbol.name} from ${uri.path}`)
 			await this.generateRootNodeFromSymbol(symbol)
         }
     }
@@ -103,6 +104,7 @@ export class DiagramGenerator {
 
                 case SymbolKind.Method:
                     parent.keys[child.name] = `${parent.name} : ${child.name}()`
+                    this.augmentElementIfNecessary(child, parent.raw)
                     break
 
                 case SymbolKind.Constructor:
@@ -123,6 +125,16 @@ export class DiagramGenerator {
 
                 default:
                     console.log('unknown element kind', child.kind, child)
+            }
+        }
+    }
+
+    async augmentElementIfNecessary(el: SymbolInformation, parent: SymbolInformation) {
+        if (this.config?.augmentElements !== true) { return }
+        if (this.document && el) {
+            const plugin = this.config?.languagePlugins[this.document.languageId]
+            if (plugin && plugin.augmentElementNode) {
+                await plugin.augmentElementNode(el, parent, this.document, this)
             }
         }
     }
@@ -156,11 +168,13 @@ export interface DiagramNode {
 }
 
 interface DiagramGeneratorConfig {
+    augmentElements: boolean
     languagePlugins: { [extension: string]: LanguagePlugin }
 }
 
 export interface LanguagePlugin {
     augmentRootNode(node: DiagramNode, document: TextDocument, generator: DiagramGenerator): Promise<any> 
+    augmentElementNode?(node: SymbolInformation, parent: SymbolInformation, document: TextDocument, generator: DiagramGenerator): Promise<any> 
 }
 
 type DiagramNodeLookup = { [key: string]: DiagramNode }
