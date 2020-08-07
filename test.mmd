@@ -1,45 +1,10 @@
 classDiagram
 class Company
-Company : LONG_TAIL_LOGGING_TAG
-Company : POSSIBLE_ACTIONS
-Company : SELF_REPORTED_MAU_RANGES
-class ApiAvailabilityState
-ApiAvailabilityState : AVAILABLE
-ApiAvailabilityState : SDK_DOWN
-ApiAvailabilityState : REST_DOWN
-ApiAvailabilityState : ALL_API_DOWN
-ApiAvailabilityState : AVAILABLE_STATES_SDK
-ApiAvailabilityState : AVAILABLE_STATES_REST
-
-ApiAvailabilityState <.. Company
-Company : DEFAULT_TIME_ZONE
-class ESP
-ESP : SENDGRID
-ESP : MAILJET
-ESP : SPARKPOST
-ESP : NAMES
-
-ESP <.. Company
-Company : DEFAULT_ESP
-class SMSProvider
-SMSProvider : TWILIO
-
-SMSProvider <.. Company
-class AccountStatuses
-AccountStatuses : SUSPENDED
-AccountStatuses : ACTIVE
-AccountStatuses : CHURNED
-
-AccountStatuses <.. Company
-class DataPointPolicy
-DataPointPolicy : LEGACY
-DataPointPolicy : STANDARD_V1
-DataPointPolicy : EXCLUDE_PROFILE
-DataPointPolicy : STANDARD_V2
-DataPointPolicy : EXCLUDED_EVENTS
-DataPointPolicy : READABLE_INFO
-
-DataPointPolicy <.. Company
+Company : static LONG_TAIL_LOGGING_TAG
+Company : static POSSIBLE_ACTIONS
+Company : static SELF_REPORTED_MAU_RANGES
+Company : static DEFAULT_TIME_ZONE
+Company : static DEFAULT_ESP
 Company : email_sending_esp()
 Company : email_sending_esp=()
 Company : has_multiple_esps?()
@@ -73,4 +38,58 @@ Company : ensure_company_settings_and_set_feature_flippers()
 Company : ensure_first_app_group()
 Company : destroy_company_settings()
 Company : ensure_notification_preferences()
+Company : actions <Array>
+Company : manage_developers_separately <Boolean>
+Company : email_account_username
+Company : epe
+Company : self_reported_mau <Integer>
+Company : mag_plus_plan <Integer>
+Company : email_card_published <Boolean>
+Company : desc <String>
+Company : locale <String>
+Company : time_zone <String>
+Company : ee <Boolean>
+Company : braze_support_portal_user_allotment <Integer>
+Company : esp <Integer>
+Company : email_events_username <String>
+Company : email_events_password_enc
 
+class ApiAvailabilityState
+ApiAvailabilityState : static AVAILABLE
+ApiAvailabilityState : static SDK_DOWN
+ApiAvailabilityState : static REST_DOWN
+ApiAvailabilityState : static ALL_API_DOWN
+ApiAvailabilityState : static AVAILABLE_STATES_SDK
+ApiAvailabilityState : static AVAILABLE_STATES_REST
+
+class ESP
+ESP : static SENDGRID
+ESP : static MAILJET
+ESP : static SPARKPOST
+ESP : static NAMES
+
+class SMSProvider
+SMSProvider : static TWILIO
+
+class AccountStatuses
+AccountStatuses : static SUSPENDED
+AccountStatuses : static ACTIVE
+AccountStatuses : static CHURNED
+
+class DataPointPolicy
+DataPointPolicy : static LEGACY
+DataPointPolicy : static STANDARD_V1
+DataPointPolicy : static EXCLUDE_PROFILE
+DataPointPolicy : static STANDARD_V2
+DataPointPolicy : static EXCLUDED_EVENTS
+DataPointPolicy : static READABLE_INFO
+
+ApiAvailabilityState <.. Company
+ESP <.. Company
+SMSProvider <.. Company
+AccountStatuses <.. Company
+DataPointPolicy <.. Company
+Company --> EspAccountBase: has_many
+Company --> MessagingService: has_many
+Company --> Segment: has_many
+Company --> CompanyArchiveRecord: has_one
