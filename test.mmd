@@ -1,26 +1,30 @@
 classDiagram
-class AudienceSyncStepBase
-AudienceSyncStepBase : static TYPE_NAME
-AudienceSyncStepBase : get_client()
-AudienceSyncStepBase : create_audience()
-AudienceSyncStepBase : advance_after_exhausting_retries?()
-AudienceSyncStepBase : execute()
-AudienceSyncStepBase : redis_key()
-AudienceSyncStepBase : get_base_step_object()
-AudienceSyncStepBase : get_step_with_redis_key()
-AudienceSyncStepBase : custom_audience_id <String>
-AudienceSyncStepBase : custom_audience_name <String>
-AudienceSyncStepBase : action <String>
-AudienceSyncStepBase : fields_to_match <Array>
-AudienceSyncStepBase : intent <String>
+class volumes
+volumes : mongodb
+volumes : postgresdb
 
-class Action
-Action : static ADD_USERS
-Action : static REMOVE_USERS
+class redis
+redis : image
 
-class Intent
-Intent : static CREATE_NEW
-Intent : static SYNC_TO_EXISTING
+class mongo
+mongo : image
 
-Action <.. AudienceSyncStepBase
-Intent <.. AudienceSyncStepBase
+class memcached
+memcached : image
+
+class postgres
+postgres : image
+
+class mailcatcher
+mailcatcher : image
+
+class platformdashboard
+platformdashboard : image
+platformdashboard : command
+platformdashboard : restart
+
+class platformapi
+platformapi : image
+platformapi : command
+platformapi : restart
+
