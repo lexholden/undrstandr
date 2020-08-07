@@ -1,0 +1,76 @@
+classDiagram
+class Company
+Company : LONG_TAIL_LOGGING_TAG
+Company : POSSIBLE_ACTIONS
+Company : SELF_REPORTED_MAU_RANGES
+class ApiAvailabilityState
+ApiAvailabilityState : AVAILABLE
+ApiAvailabilityState : SDK_DOWN
+ApiAvailabilityState : REST_DOWN
+ApiAvailabilityState : ALL_API_DOWN
+ApiAvailabilityState : AVAILABLE_STATES_SDK
+ApiAvailabilityState : AVAILABLE_STATES_REST
+
+ApiAvailabilityState <.. Company
+Company : DEFAULT_TIME_ZONE
+class ESP
+ESP : SENDGRID
+ESP : MAILJET
+ESP : SPARKPOST
+ESP : NAMES
+
+ESP <.. Company
+Company : DEFAULT_ESP
+class SMSProvider
+SMSProvider : TWILIO
+
+SMSProvider <.. Company
+class AccountStatuses
+AccountStatuses : SUSPENDED
+AccountStatuses : ACTIVE
+AccountStatuses : CHURNED
+
+AccountStatuses <.. Company
+class DataPointPolicy
+DataPointPolicy : LEGACY
+DataPointPolicy : STANDARD_V1
+DataPointPolicy : EXCLUDE_PROFILE
+DataPointPolicy : STANDARD_V2
+DataPointPolicy : EXCLUDED_EVENTS
+DataPointPolicy : READABLE_INFO
+
+DataPointPolicy <.. Company
+Company : email_sending_esp()
+Company : email_sending_esp=()
+Company : has_multiple_esps?()
+Company : get_time_zone()
+Company : email_enabled?()
+Company : get_data_point_policy_for_app()
+Company : data_point_policy_for_app_cache_key()
+Company : user_count()
+Company : email_account_password()
+Company : email_account_password=()
+Company : email_account_isolated?()
+Company : get_total_mau()
+Company : get_total_billable_users()
+Company : get_iana_time_zone()
+Company : track_action()
+Company : as_json()
+Company : has_sessions?()
+Company : churned_or_suspended?()
+Company : dev_emails()
+Company : billing_emails()
+Company : email_body_max_size_override()
+Company : email_footer_max_size_override()
+Company : company_settings()
+Company : app_api_keys()
+Company : rest_uptime_sla_api_keys()
+Company : update_sendgrid_timezone()
+Company : update_sendgrid_api_key()
+Company : company_cache_observer()
+Company : set_feature_flippers()
+Company : ensure_company_settings_and_set_feature_flippers()
+Company : ensure_first_app_group()
+Company : destroy_company_settings()
+Company : ensure_notification_preferences()
+
