@@ -6,6 +6,7 @@ export class DiagramGenerator {
         public config?: DiagramGeneratorConfig
     ) {}
     
+    cache: { [fileName: string]: boolean } = {}
     nodes: DiagramNodeLookup = {}
     connections: [string, string, string?][] = []
     document?: TextDocument
@@ -17,12 +18,12 @@ export class DiagramGenerator {
     }
 
     async addFile(uri: Uri) {
+        if (this.cache[uri.path]) { return }
+        this.cache[uri.path] = true // Mark that we are already traversing this path to avoid infinite recursion
         const symbols: any[] = await commands.executeCommand("vscode.executeDocumentSymbolProvider", uri) as any
-        // console.log(`generating a ${document.languageId} erd`)
-		// const types = await commands.executeCommand('vscode.executeTypeDefinitionProvider', path, )
 		for (let symbol of symbols) {
 			await this.generateRootNodeFromSymbol(symbol)
-		}
+        }
     }
 
 	private async generateRootNodeFromSymbol(symbol: SymbolInformation): Promise<DiagramNode|null> {

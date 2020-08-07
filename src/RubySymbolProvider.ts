@@ -1,4 +1,4 @@
-import { DocumentSymbolProvider, TextDocument, CancellationToken, SymbolInformation, SymbolKind, Location, DocumentSymbol, Range } from "vscode";
+import { DocumentSymbolProvider, TextDocument, CancellationToken, SymbolInformation, SymbolKind, Location, DocumentSymbol, Range, commands } from "vscode";
 import { readFileSync } from "fs";
 import { LanguagePlugin, DiagramNode, DiagramGenerator } from './DiagramGenerator'
 
@@ -25,7 +25,7 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
         for (let attr of attributes || []) {
             const details = this.parseAttribute(attr)
             if (details) {
-                console.log('augmenting an attribute', { node, ...details, attr })
+                // console.log('augmenting an attribute', { node, ...details, attr })
                 const { type, name, meta } = details
                 switch (type) {
                     case 'field':
@@ -37,15 +37,31 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
                     case 'has_many':
                     case 'has_one':
                     case 'belongs_to':
-                        if (meta.class_name) {
-                            const parts = meta.class_name.match(/(\w)+(::)*/g)
-                            const className = parts?.find(str => !str.endsWith('::'))
-                            if (className) { generator.connections.push([node.name, className, `${node.name} --> ${className}: ${type}`]) }
+                        const connectionName = meta.class_name
+                            ? this.parseClassName(meta.class_name)
+                            : name
+                        if (connectionName) {
+                            generator.connections.push([node.name, connectionName, `${node.name} --> ${connectionName}: ${type}`])
                         }
+                        
+                        if (meta.class_name) {
+                            const offset = doc.getText().indexOf(meta.class_name)
+                            const position = doc.positionAt(offset + meta.class_name.length - 6)
+                            // console.log('want to get', meta.class_name, { node, doc, offset, position, ...meta })
+                            if (position) {
+                                const connections = await commands.executeCommand('vscode.executeDefinitionProvider', doc.uri, position)
+                                for (let conn of connections) {
+                                    await generator.addFile(conn.uri)
+                                }
+                            } else {
+                                console.log('could not recurse', meta.class_name)
+                            }
+                        }
+
                         break
 
                     default:
-                        console.log('unknown type', details.type)
+                        console.log('unknown type', details.type, { node, ...details, attr })
                 }
             }
         }
@@ -72,6 +88,11 @@ export class RubySymbolProvider implements DocumentSymbolProvider, LanguagePlugi
             return { type, name, meta }
         }
         return null
+    }
+
+    parseClassName(fullPath: string): string|undefined {
+        const parts = fullPath.match(/(\w)+(::)*/g)
+        return parts?.find(str => !str.endsWith('::'))
     }
 }
 

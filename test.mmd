@@ -39,20 +39,20 @@ Company : ensure_first_app_group()
 Company : destroy_company_settings()
 Company : ensure_notification_preferences()
 Company : actions <Array>
-Company : manage_developers_separately <Boolean>
-Company : email_account_username
-Company : epe
-Company : self_reported_mau <Integer>
-Company : mag_plus_plan <Integer>
-Company : email_card_published <Boolean>
-Company : desc <String>
-Company : locale <String>
-Company : time_zone <String>
-Company : ee <Boolean>
-Company : braze_support_portal_user_allotment <Integer>
-Company : esp <Integer>
-Company : email_events_username <String>
-Company : email_events_password_enc
+Company : contact_email <String>
+Company : ep
+Company : sgk
+Company : self_reported_app_name <String>
+Company : email_campaign_summaries <Boolean>
+Company : name <String>
+Company : phone <String>
+Company : availability_state <Integer>
+Company : hipaa_compliant <Boolean>
+Company : is_demo_company <Boolean>
+Company : data_point_policy <Integer>
+Company : account_status <Integer>
+Company : email_events_password
+Company : default_users_track_rate_limit <Integer>
 
 class ApiAvailabilityState
 ApiAvailabilityState : static AVAILABLE
@@ -84,12 +84,153 @@ DataPointPolicy : static STANDARD_V2
 DataPointPolicy : static EXCLUDED_EVENTS
 DataPointPolicy : static READABLE_INFO
 
+class EspAccountBase
+EspAccountBase : static REMOTE_CACHE_EXPIRES_IN_SECONDS
+EspAccountBase : static LOCAL_CACHE_EXPIRES_IN_SECONDS
+EspAccountBase : static SUBUSER_NAME_REGEX
+EspAccountBase : static SUBUSER_NAME_MAX_LENGTH
+EspAccountBase : esp()
+EspAccountBase : api_client()
+EspAccountBase : matches_document?()
+EspAccountBase : credentials()
+EspAccountBase : find_or_create_default()
+EspAccountBase : new_esp_account()
+EspAccountBase : sending_account_from_company_and_app_group()
+EspAccountBase : get_with_cache_attempt()
+EspAccountBase : cache_key()
+EspAccountBase : expire_cache()
+EspAccountBase : validate_alias()
+EspAccountBase : contact_email <String>
+EspAccountBase : ep
+EspAccountBase : sgk
+EspAccountBase : self_reported_app_name <String>
+EspAccountBase : email_campaign_summaries <Boolean>
+EspAccountBase : name <String>
+EspAccountBase : phone <String>
+EspAccountBase : availability_state <Integer>
+EspAccountBase : hipaa_compliant <Boolean>
+EspAccountBase : is_demo_company <Boolean>
+
+class Domain
+Domain : static REMOTE_CACHE_EXPIRES_IN_SECONDS
+Domain : static LOCAL_CACHE_EXPIRES_IN_SECONDS
+Domain : static IP_POOL_NAME_REGEX
+Domain : static IP_POOL_NAME_MAX_LENGTH
+Domain : static DOMAIN_FROM_EMAIL_REGEX
+Domain : ip_pool_dashboard_display_name()
+Domain : find_or_create_default()
+Domain : get_from_email_address()
+Domain : get_with_cache_attempt()
+Domain : get_with_string_based_cache_attempt()
+Domain : valid_domain_name?()
+Domain : generate_domain_deletable_campaign_query()
+Domain : generate_domain_deletable_app_group_setting_query()
+Domain : split_domain_for_sendgrid()
+Domain : is_deletable?()
+Domain : validate_domain()
+Domain : validate_ip_pool_information()
+Domain : make_sure_esp_account_is_in_company()
+Domain : cache_key()
+Domain : expire_cache()
+Domain : string_based_cache_key()
+Domain : expire_string_based_cache()
+Domain : contact_email <String>
+Domain : ep
+Domain : sgk
+Domain : self_reported_app_name <String>
+Domain : email_campaign_summaries <Boolean>
+Domain : desc <String>
+Domain : locale <String>
+Domain : time_zone <String>
+Domain : ee <Boolean>
+Domain : braze_support_portal_user_allotment <Integer>
+Domain : esp <Integer>
+
+class Account
+Account : contact_email <String>
+Account : ep
+Account : sgk
+Account : self_reported_app_name <String>
+
+class MessagingService
+MessagingService : static SUBSCRIPTION_GROUP_NAME_SUFFIX
+MessagingService : static SUBSCRIPTION_GROUP_MMS_NAME_SUFFIX
+MessagingService : get_with_cache_attempt()
+MessagingService : cache_key()
+MessagingService : mms_enabled?()
+MessagingService : as_json()
+MessagingService : subscription_group_name()
+MessagingService : subscription_group_description()
+MessagingService : create_subscription_group()
+MessagingService : expire_cache()
+MessagingService : validate_app_group_association()
+MessagingService : contact_email <String>
+MessagingService : ep
+MessagingService : sgk
+MessagingService : self_reported_app_name <String>
+MessagingService : email_campaign_summaries <Boolean>
+
+class Template
+Template : static CONTENT_BLOCK_INCLUDER_TYPE
+Template : static TITLE
+Template : liquid_templatable_field_keys()
+Template : get_company()
+Template : as_json()
+Template : attached_images_as_json()
+Template : contact_email <String>
+Template : ep
+Template : sgk
+Template : self_reported_app_name <String>
+
+class CompanyArchiveRecord
+
+class AnalyticsEvent
+
 ApiAvailabilityState <.. Company
 ESP <.. Company
 SMSProvider <.. Company
 AccountStatuses <.. Company
 DataPointPolicy <.. Company
 Company --> EspAccountBase: has_many
-Company --> MessagingService: has_many
-Company --> Segment: has_many
-Company --> CompanyArchiveRecord: has_one
+EspAccountBase --> Domain: has_many
+Domain --> Domain: has_many
+Domain --> Account: has_many
+Account --> Domain: has_many
+Account --> Account: has_many
+Account --> Account: has_many
+Domain --> MessagingService: has_many
+MessagingService --> Domain: has_many
+MessagingService --> Account: has_many
+MessagingService --> Account: has_many
+MessagingService --> apps: has_many
+MessagingService --> itunes_company: belongs_to
+MessagingService --> Template: has_many
+Template --> Domain: has_many
+Template --> Account: has_many
+Template --> Account: has_many
+MessagingService --> CompanyArchiveRecord: has_one
+MessagingService --> developers: has_many
+Domain --> Account: has_many
+Domain --> apps: has_many
+Domain --> itunes_company: belongs_to
+Domain --> Template: has_many
+Domain --> Account: belongs_to
+Account --> Domain: has_many
+Account --> Account: has_many
+Account --> Account: has_many
+Domain --> developers: has_many
+Domain --> notification_preferences: has_many
+EspAccountBase --> Account: has_many
+EspAccountBase --> Account: has_many
+EspAccountBase --> apps: has_many
+EspAccountBase --> itunes_company: belongs_to
+EspAccountBase --> Template: has_many
+EspAccountBase --> Account: belongs_to
+EspAccountBase --> AnalyticsEvent: has_many
+Company --> Account: has_many
+Company --> Account: has_many
+Company --> apps: has_many
+Company --> itunes_company: belongs_to
+Company --> Template: has_many
+Company --> Account: belongs_to
+Company --> AnalyticsEvent: has_many
